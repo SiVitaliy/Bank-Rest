@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-insert-default-users
+      author: vitaliy
+
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: creation_time
+                  valueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: password
+                  value: "$2a$10$96.jKNbqt6LuomJ2lArSruKtBJtvXwVU3p5d5vqChaQxg9is1qT0u"
+              - column:
+                  name: role
+                  value: ADMIN
+              - column:
+                  name: username
+                  value: admin
+              - column:
+                  name: enabled
+                  valueBoolean: "true"
+
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: creation_time
+                  valueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: password
+                  value: "$2a$10$1dsnnTCzv2KzAl.fzQYaYOEvRFf6AXTVNlGjDC4PV6.dcnQKxxNP."
+              - column:
+                  name: role
+                  value: USER
+              - column:
+                  name: username
+                  value: user
+              - column:
+                  name: enabled
+                  valueBoolean: "true"
+
+      rollback:
+        - delete:
+            tableName: users
+            where: username IN ('admin', 'user')

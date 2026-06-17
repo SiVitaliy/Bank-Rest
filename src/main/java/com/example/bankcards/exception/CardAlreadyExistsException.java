@@ -1,0 +1,8 @@
+package com.example.bankcards.exception;
+
+public class CardAlreadyExistsException extends RuntimeException{
+    public CardAlreadyExistsException(){
+        super("Произошла ошибка пр добавлении карты.");
+    }
+
+}
