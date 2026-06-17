@@ -77,7 +77,6 @@ public class CardService {
         if (cardRepository.existsByCardNumber(encryptedNumber)){
             throw new CardAlreadyExistsException();
         }
-        log.info(fullNumber+ " -> "+ encryptedNumber);
         String lastFour = fullNumber.substring(fullNumber.length() - 4);
         User owner = userRepository.findById(userId)
                 .orElseThrow(()-> new UserNotFoundException(userId));
