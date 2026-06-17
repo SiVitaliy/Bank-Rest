@@ -1,0 +1,71 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-transaction-table
+      author: vitaliy
+
+      changes:
+        - createTable:
+            tableName: transaction
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_transaction
+                    nullable: false
+
+              - column:
+                  name: owner_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: from_card
+                  type: BIGINT
+
+              - column:
+                  name: to_card
+                  type: BIGINT
+
+              - column:
+                  name: amount
+                  type: NUMERIC(38, 2)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: creation_time
+                  type: TIMESTAMP(6)
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: transaction
+            baseColumnNames: owner_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_transaction_owner
+
+        - addForeignKeyConstraint:
+            baseTableName: transaction
+            baseColumnNames: from_card
+            referencedTableName: cards
+            referencedColumnNames: id
+            constraintName: fk_transaction_from_card
+            onDelete: SET NULL
+
+        - addForeignKeyConstraint:
+            baseTableName: transaction
+            baseColumnNames: to_card
+            referencedTableName: cards
+            referencedColumnNames: id
+            constraintName: fk_transaction_to_card
+            onDelete: SET NULL
+
+      rollback:
+        - dropTable:
+            tableName: transaction
+            cascadeConstraints: true

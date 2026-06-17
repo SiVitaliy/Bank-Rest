@@ -1,0 +1,50 @@
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: bank-rest-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: BANK_REST_DB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - bank-rest-postgres-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d BANK_REST_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  application:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: bank-rest-application
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/BANK_REST_DB
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: 92304174cf5f376e4100aa041c62fb1a3c2ac272bf4cfc0ab6645e5e0abdcc84
+      ENCRYPTION_SECRET: x7kD9mPq2wL5sR8vY1nB4cF6gH0jK3lA
+
+    ports:
+      - "8080:8080"
+
+volumes:
+  bank-rest-postgres-data:
+
