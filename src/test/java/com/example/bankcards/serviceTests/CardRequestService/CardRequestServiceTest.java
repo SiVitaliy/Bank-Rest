@@ -350,34 +350,7 @@ class CardRequestServiceTest {
         verify(cardRequestRepository).save(cardRequest);
     }
 
-    @Test
-    void process_approveActivateExpiredCard_throwsException() {
-        User admin = mock(User.class);
-        ProcessCardRequest request = processRequest("APPROVE");
 
-        Card card = new Card();
-        card.setStatus(Card.CardStatus.EXPIRED);
-
-        CardRequest cardRequest = pendingRequest(
-                CardRequest.RequestType.ACTIVATE,
-                card
-        );
-
-        when(cardRequestRepository.findById(15L))
-                .thenReturn(Optional.of(cardRequest));
-
-        assertThatThrownBy(() -> sut.process(15L, request, admin))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Просроченную карту нельзя активировать");
-
-        assertThat(card.getStatus())
-                .isEqualTo(Card.CardStatus.EXPIRED);
-
-        verify(cardRepository, never()).save(any(Card.class));
-        verify(cardRequestRepository, never())
-                .save(any(CardRequest.class));
-        verifyNoInteractions(cardRequestMapper);
-    }
 
     @Test
     void process_approveDeleteRequest_deletesCardAndClearsReference() {

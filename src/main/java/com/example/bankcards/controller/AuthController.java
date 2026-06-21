@@ -19,7 +19,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+/**
+ * REST-контроллер для регистрации пользователей и аутентификации.
+ *
+ * Предоставляет возможность для создания новой учетной записи и получения JWT-токена
+ * по имени пользователя и паролю.
+ */
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -30,7 +35,16 @@ public class AuthController {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
-
+    /**
+     * Регистрирует нового пользователя и возвращает JWT-токен.
+     *
+     * После успешного создания учетной записи токен генерируется по имени
+     * зарегистрированного пользователя.
+     *
+     * @param registerUserRequest данные для регистрации пользователя
+     * @return JWT-токен зарегистрированного пользователя
+     * @throws UsernameAlreadyExistsException если пользователь с таким именем уже существует
+     */
     @Operation(summary = "Зарегистрировать пользователя",
             description = "Создаёт нового пользователя и возвращает JWT-токен")
     @PostMapping("/register")
@@ -42,7 +56,17 @@ public class AuthController {
         String token = jwtUtil.generateToken(registerUserRequest.username());
         return ResponseEntity.ok(new JwtResponseDto(token));
     }
-
+    /**
+     * Выполняет аутентификацию пользователя и возвращает JWT-токен.
+     *
+     * Проверяет переданные имя пользователя и пароль через {@link AuthenticationManager}.
+     * При успешной аутентификации генерирует JWT-токен для дальнейшего доступа
+     * к защищенным возможностям API.
+     *
+     * @param loginUserRequest данные для входа пользователя
+     * @return JWT-токен аутентифицированного пользователя
+     * @throws BadCredentialsException если имя пользователя или пароль неверны
+     */
     @Operation(summary = "Выполнить вход",
             description = "Проверяет имя пользователя и пароль, затем возвращает JWT-токен")
     @PostMapping("/login")

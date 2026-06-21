@@ -17,7 +17,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+/**
+ * REST-контроллер для административного просмотра транзакций пользователей.
+ * Предоставляет администратору доступ к списку транзакций конкретного пользователя
+ * и к информации о транзакции по её идентификатору.
+ */
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -27,13 +31,22 @@ import org.springframework.web.bind.annotation.RestController;
 )
 public class AdminTransactionController {
     private final TransactionService transactionService;
-
+    /**
+     * Возвращает страницу транзакций указанного пользователя.
+     *
+     * Поддерживает пагинацию и сортировку. По умолчанию транзакции сортируются
+     * по дате создания в порядке возрастания.
+     *
+     * @param userId идентификатор пользователя, транзакции которого нужно получить
+     * @param pageable параметры пагинации и сортировки
+     * @return страница с транзакциями пользователя
+     */
     @Operation(
             summary = "Получить транзакции пользователя",
             description = "Возвращает страницу транзакций указанного пользователя с поддержкой пагинации и сортировки"
     )
     @GetMapping("/users/{userId}/transactions")
-    public ResponseEntity<PageResponse<TransactionDto>>findAllUserTransaction(
+    public ResponseEntity<PageResponse<TransactionDto>>findAllUserTransactions(
             @Parameter(description = "Идентификатор пользователя", example = "3")
             @PathVariable Long userId,
             @ParameterObject
@@ -42,7 +55,12 @@ public class AdminTransactionController {
 
         return ResponseEntity.ok(transactionService.findAllByUserId(pageable,userId));
     }
-
+    /**
+     * Возвращает транзакцию по её идентификатору.
+     *
+     * @param id идентификатор транзакции
+     * @return данные найденной транзакции
+     */
     @Operation(summary = "Получить транзакцию по идентификатору",
             description = "Возвращает подробную информацию о транзакции по её идентификатору")
     @GetMapping("/transactions/{id}")

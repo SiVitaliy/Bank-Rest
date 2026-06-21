@@ -20,7 +20,11 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
+/**
+ * REST-контроллер для обработки заявок на операции с картами для администратора.
+ * Предоставляет администратору возможность просматривать заявки пользователей,
+ * фильтровать их по типу и статусу, а также одобрять или отклонять заявки.
+ */
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -30,7 +34,15 @@ import org.springframework.web.bind.annotation.*;
 public class AdminCardRequestController {
 
     private final CardRequestService cardRequestService;
-
+    /**
+     * Возвращает страницу заявок на операции с картами.
+     * Поддерживает фильтрацию по типу заявки и статусу, а также пагинацию
+     * и сортировку. По умолчанию заявки сортируются по дате создания
+     * в порядке убывания.
+     * @param filter параметры фильтрации заявок
+     * @param pageable параметры пагинации и сортировки
+     * @return страница с заявками на операции с картами
+     */
     @Operation(summary = "Получить все заявки",
             description = "Возвращает список всех заявок с пагинацией и сортировкой по дате создания (по убыванию)")
 
@@ -47,7 +59,14 @@ public class AdminCardRequestController {
 
         return ResponseEntity.ok(cardRequestService.findAllRequests(filter,pageable));
     }
-
+    /**
+     * Обрабатывает заявку на операцию с картой.
+     * Администратор может одобрить или отклонить заявку.
+     * @param id идентификатор обрабатываемой заявки
+     * @param request решение администратора по заявке
+     * @param user текущий аутентифицированный администратор
+     * @return обновлённая заявка после обработки
+     */
     @Operation(summary = "Обработать заявку",
             description = "Одобряет (APPROVE) или отклоняет (REJECT) заявку. " +
                     "При одобрении выполняет действие: блокирует, активирует или выпускает карту.")

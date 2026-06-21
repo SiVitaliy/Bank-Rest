@@ -22,7 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Objects;
-
+/**
+ * Сервис для работы с транзакциями между банковскими картами.
+ *
+ * Отвечает за получение транзакций пользователя, административный просмотр
+ * транзакций, получение конкретной транзакции и выполнение перевода средств
+ * между картами текущего пользователя.
+ */
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -32,6 +38,13 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
 
+    /**
+     * Возвращает страницу транзакций текущего пользователя.
+     *
+     * @param pageable параметры пагинации и сортировки
+     * @param user текущий аутентифицированный пользователь
+     * @return страница транзакций пользователя
+     */
     public PageResponse<TransactionDto> findAllByUser(Pageable pageable, User user) {
         log.debug("Получение транзакций пользователя userId={}, page={}, size={}",
                 user.getId(), pageable.getPageNumber(), pageable.getPageSize());
@@ -43,7 +56,15 @@ public class TransactionService {
 
         return PageResponse.from(pageOfTransactions, transactionMapper::toDto);
     }
-
+    /**
+     * Возвращает страницу транзакций пользователя по его идентификатору.
+     *
+     * Метод используется администратором для просмотра транзакций конкретного пользователя.
+     *
+     * @param pageable параметры пагинации и сортировки
+     * @param userId идентификатор пользователя
+     * @return страница транзакций пользователя
+     */
     public PageResponse<TransactionDto> findAllByUserId(Pageable pageable, Long userId) {
         log.debug("Получение транзакций пользователя администратором userId={}, page={}, size={}",
                 userId, pageable.getPageNumber(), pageable.getPageSize());
@@ -66,6 +87,12 @@ public class TransactionService {
         return transactionMapper.toDto(transaction);
     }
 
+    /**
+     * Возвращает транзакцию по идентификатору.
+     * @param id идентификатор транзакции
+     * @return найденная транзакция
+     * @throws TransactionNotFoundException если транзакция не найдена
+     */
     public TransactionDto getTransactionForUser(Long id, User user) {
         log.debug("Получение транзакции transactionId={} пользователем userId={}",
                 id, user.getId());
@@ -78,7 +105,20 @@ public class TransactionService {
 
         return transactionMapper.toDto(transaction);
     }
-
+    /**
+     * Выполняет перевод средств между двумя картами текущего пользователя.
+     * Проверяет, что карты разные, существуют, принадлежат текущему пользователю,
+     * находятся в статусе {@code ACTIVE}, а на карте отправителя достаточно средств.
+     * После успешной проверки обновляет балансы карт и создаёт запись транзакции.
+     * @param request данные перевода
+     * @param user текущий аутентифицированный пользователь
+     * @return созданная транзакция
+     * @throws IllegalArgumentException если выбраны одинаковые карты, пользователь не является владельцем карт
+     *                                  или сумма перевода некорректна
+     * @throws CardNotFoundException если карта отправителя или получателя не найдена
+     * @throws IllegalStateException если одна из карт неактивна
+     * @throws NotEnoughMoneyException если на карте отправителя недостаточно средств
+     */
     public TransactionDto performTransaction(TransactionRequest request, User user) {
         log.info("Начало выполнения транзакции userId={}, fromCardId={}, toCardId={}, amount={}",
                 user.getId(), request.fromCardId(), request.toCardId(), request.amount());

@@ -12,7 +12,7 @@ public record CardDto (
         @Schema(description = "Уникальный идентификатор карты", example = "1")
         Long id,
         @Schema(description = "Замаскированный номер карты", example = "**** **** **** 1234")
-        String cardNumber,
+        String maskedCardNumber,
         @Schema(description = "Владелец карты")
         UserDto owner,
         @Schema(description = "Дата и время создания карты", example = "2026-06-10T12:00:00")

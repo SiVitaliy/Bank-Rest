@@ -25,6 +25,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
+/**
+ * REST-контроллер для управления банковскими картами администратором.
+ * Предоставляет администратору операции просмотра всех карт, получения карты по идентификатору,
+ * выпуска новой карты пользователю и изменения срока действия существующей карты.
+ */
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -35,6 +40,13 @@ public class AdminCardController {
 
     private final CardService cardService;
 
+
+    /**
+     * Возвращает страницу банковских карт с поддержкой фильтрации, пагинации и сортировки.
+     * @param filter параметры фильтрации карт
+     * @param pageable параметры пагинации и сортировки
+     * @return страница с данными банковских карт
+     */
     @Operation(summary = "Получить все карты",
             description = "Возвращает список всех карт с пагинацией и сортировкой по дате создания")
     @GetMapping("/cards")
@@ -50,15 +62,28 @@ public class AdminCardController {
         return ResponseEntity.ok(cardService.findAllCards(filter,pageable));
     }
 
+    /**
+     * Возвращает банковскую карту по её идентификатору.
+     * @param id идентификатор карты
+     * @return данные найденной карты
+     */
     @Operation(summary = "Получить карту по ID",
             description = "Возвращает конкретную карту по её идентификатору")
-    @GetMapping("cards/{id}")
+    @GetMapping("/cards/{id}")
     public ResponseEntity<CardDto> findCard(
             @Parameter(description = "ID карты", example = "1") @PathVariable Long id) {
         log.debug("Получение карты по ID {}",id);
          return ResponseEntity.ok(cardService.findById(id));
     }
 
+
+    /**
+     * Создаёт новую банковскую карту и привязывает её к указанному пользователю.
+     * @param userId идентификатор пользователя, которому выпускается карта
+     * @param request данные для создания карты
+     * @param user аутентифицированный администратор, выпускающий карту
+     * @return созданная карта и URI созданного ресурса в заголовке Location
+     */
     @Operation(summary = "Создать карту для пользователя",
             description = "Создаёт новую банковскую карту и привязывает её к указанному пользователю")
     @PostMapping("/users/{userId}/cards")
@@ -78,6 +103,15 @@ public class AdminCardController {
         return ResponseEntity.created(location).body(cardDto);
     }
 
+
+    /**
+     * Изменяет срок действия банковской карты.
+     *
+     * @param id идентификатор карты
+     * @param request новый срок действия карты
+     * @param user текущий аутентифицированный администратор
+     * @return карта с обновлённым сроком действия
+     */
     @Operation(summary = "Изменить срок действия карты")
     @PatchMapping("/cards/{id}/expiration-date")
     public ResponseEntity<CardDto> setNewExpirationDate(

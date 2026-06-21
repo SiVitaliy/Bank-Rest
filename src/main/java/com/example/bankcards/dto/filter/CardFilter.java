@@ -28,15 +28,13 @@ public record CardFilter(
         String search,
 
         @Parameter(
-                description = "Дата и время создания карты, начиная с которой выполнять поиск",
-                example = "2026-01-01T00:00:00"
+                description = "Дата и время создания карты, начиная с которой выполнять поиск"
         )
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         LocalDateTime createdFrom,
 
         @Parameter(
-                description = "Дата и время создания карты, до которой выполнять поиск",
-                example = "2026-02-01T00:00:00"
+                description = "Дата и время создания карты, до которой выполнять поиск"
         )
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         LocalDateTime createdTo

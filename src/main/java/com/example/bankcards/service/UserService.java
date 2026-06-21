@@ -19,7 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-
+/**
+ * Сервис для работы с пользователями.
+ *
+ * Отвечает за поиск пользователей, получение пользователя по идентификатору,
+ * а также блокировку и разблокировку пользовательских учётных записей
+ * администратором.
+ */
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -27,6 +33,18 @@ import java.nio.charset.StandardCharsets;
 public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+
+    /**
+     * Возвращает страницу пользователей.
+     *
+     * Если передана строка поиска, выполняет поиск пользователей по username
+     * без учёта регистра. Если строка поиска отсутствует, возвращает всех
+     * пользователей с учётом пагинации и сортировки.
+     *
+     * @param pageable параметры пагинации и сортировки
+     * @param search строка поиска по имени пользователя
+     * @return страница найденных пользователей
+     */
     public PageResponse<UserDto> findAll(Pageable pageable, String search){
         if (search!=null && !search.isBlank()){
             String decoded = URLDecoder.decode(search, StandardCharsets.UTF_8);
@@ -40,7 +58,13 @@ public class UserService {
                 search, pageable.getPageNumber(), pageable.getPageSize());
         return PageResponse.from(pageOfUsers,userMapper::toDto);
     }
-
+    /**
+     * Возвращает пользователя по идентификатору.
+     *
+     * @param id идентификатор пользователя
+     * @return данные найденного пользователя
+     * @throws UserNotFoundException если пользователь не найден
+     */
     public  UserDto findById(Long id){
         User user =  userRepository.findById(id)
                 .orElseThrow(()-> new UserNotFoundException(id));
@@ -51,7 +75,19 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
-
+    /**
+     * Блокирует пользователя.
+     *
+     * Блокировка администратора запрещена. Если пользователь уже заблокирован,
+     * выбрасывается исключение о некорректном состоянии операции.
+     *
+     * @param userId идентификатор блокируемого пользователя
+     * @param admin администратор, выполняющий блокировку
+     * @return данные заблокированного пользователя
+     * @throws UserNotFoundException если пользователь не найден
+     * @throws IllegalArgumentException если выполняется попытка заблокировать администратора
+     * @throws IllegalStateException если пользователь уже заблокирован
+     */
     public UserDto lock(Long userId, User admin) {
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new UserNotFoundException(userId));
@@ -67,7 +103,19 @@ public class UserService {
         log.warn("Попытка заблокировать уже заблокированного пользователя userId={}", userId);
         throw new IllegalStateException("Пользователь с id "+userId+" уже заблокирован.");
     }
-
+    /**
+     * Разблокирует пользователя.
+     *
+     * Разблокировка администратора запрещена. Если пользователь не заблокирован,
+     * выбрасывается исключение о некорректном состоянии операции.
+     *
+     * @param userId идентификатор разблокируемого пользователя
+     * @param admin администратор, выполняющий разблокировку
+     * @return данные разблокированного пользователя
+     * @throws UserNotFoundException если пользователь не найден
+     * @throws IllegalArgumentException если выполняется попытка разблокировать администратора
+     * @throws IllegalStateException если пользователь не заблокирован
+     */
     public UserDto unlock(Long userId, User admin) {
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new UserNotFoundException(userId));

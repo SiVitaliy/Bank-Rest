@@ -7,7 +7,13 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-
+/**
+ * Entity заявки на выполнение операции с банковской картой.
+ *
+ * Заявка создаётся пользователем и затем обрабатывается администратором.
+ * В зависимости от типа заявки может быть выполнен выпуск, блокировка,
+ * активация или удаление карты.
+ */
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor

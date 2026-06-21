@@ -1,1 +1,1199 @@
-# Здесь будет OpenAPI описание всех доступных эндпоинтов и моделей данных.
+openapi: 3.1.0
+info:
+  title: Bank Cards REST API
+  description: "Сервис управления банковскими картами, переводами и заявками."
+  contact:
+    name: Vitaliy.Silantiev@gmail.com
+    email: Vitaliy.Silantiev@gmail.com
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Generated server url
+security:
+  - bearerAuth: []
+tags:
+  - name: Администрирование пользователей
+    description: "Просмотр пользователей, их поиск, блокировка и разблокировка"
+  - name: Заявки на операции с картами
+    description: "Создание заявок на выпуск, блокировку, разблокировку и удаление ка\
+    рт"
+  - name: Аутентификация
+    description: Регистрация пользователей и получение JWT-токена
+  - name: Транзакции пользователя
+    description: Просмотр и выполнение транзакций текущего пользователя
+  - name: Карты пользователя
+    description: Просмотр карт пользователя и выполнение операций с балансом
+  - name: Администрирование транзакций
+    description: Получение информации о транзакциях пользователей
+  - name: "Админ: заявки"
+    description: "Обработка заявок на блокировку, активацию и выпуск карт"
+  - name: "Админ: карты"
+    description: Управление картами любых пользователей
+paths:
+  /api/transactions:
+    get:
+      tags:
+        - Транзакции пользователя
+      summary: Получить транзакции пользователя
+      description: Возвращает страницу транзакций текущего пользователя с поддержкой
+        пагинации и сортировки
+      operationId: findAllTransactionsForUser
+      parameters:
+        - name: page
+          in: query
+          description: Zero-based page index (0..N)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: The size of the page to be returned
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+        - name: sort
+          in: query
+          description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+          required: false
+          schema:
+            type: array
+            default:
+              - "creationTime,ASC"
+            items:
+              type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseTransactionDto"
+    post:
+      tags:
+        - Транзакции пользователя
+      summary: Выполнить транзакцию
+      description: Выполняет перевод между картами и возвращает созданную транзакцию
+      operationId: performTransaction
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TransactionDto"
+  /api/card-requests:
+    post:
+      tags:
+        - Заявки на операции с картами
+      summary: Создать заявку на операцию с картой
+      description: Создаёт заявку на выполнение указанной операции с картой текущего
+        пользователя
+      operationId: manageCard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardActionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardRequestDto"
+  /api/auth/register:
+    post:
+      tags:
+        - Аутентификация
+      summary: Зарегистрировать пользователя
+      description: Создаёт нового пользователя и возвращает JWT-токен
+      operationId: registration
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/JwtResponseDto"
+  /api/auth/login:
+    post:
+      tags:
+        - Аутентификация
+      summary: Выполнить вход
+      description: "Проверяет имя пользователя и пароль, затем возвращает JWT-токе\
+        н"
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/JwtResponseDto"
+  /admin/users/{userId}/cards:
+    post:
+      tags:
+        - "Админ: карты"
+      summary: Создать карту для пользователя
+      description: Создаёт новую банковскую карту и привязывает её к указанному пользователю
+      operationId: createCard
+      parameters:
+        - name: userId
+          in: path
+          description: "ID пользователя, которому выпускается карта"
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCardRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardDto"
+      security:
+        - bearerAuth: []
+  /api/cards/{id}/balance:
+    patch:
+      tags:
+        - Карты пользователя
+      summary: Изменить баланс карты
+      description: Пополняет баланс карты или списывает средства в зависимости от
+        значения operation
+      operationId: addBalance
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор карты
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeBalanceRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardDto"
+  /admin/users/{userId}/unlock:
+    patch:
+      tags:
+        - Администрирование пользователей
+      summary: Разблокировать пользователя
+      description: Разблокирует пользователя по идентификатору
+      operationId: unlock
+      parameters:
+        - name: userId
+          in: path
+          description: Идентификатор разблокируемого пользователя
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 3
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserDto"
+  /admin/users/{userId}/lock:
+    patch:
+      tags:
+        - Администрирование пользователей
+      summary: Заблокировать пользователя
+      description: Блокирует пользователя по идентификатору
+      operationId: lock
+      parameters:
+        - name: userId
+          in: path
+          description: Идентификатор блокируемого пользователя
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 3
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserDto"
+  /admin/cards/{id}/expiration-date:
+    patch:
+      tags:
+        - "Админ: карты"
+      summary: Изменить срок действия карты
+      operationId: setNewExpirationDate
+      parameters:
+        - name: id
+          in: path
+          description: ID карты
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCardExpirationDateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardDto"
+      security:
+        - bearerAuth: []
+  /admin/card-requests/{id}:
+    patch:
+      tags:
+        - "Админ: заявки"
+      summary: Обработать заявку
+      description: "Одобряет (APPROVE) или отклоняет (REJECT) заявку. При одобрени\
+        и выполняет действие: блокирует, активирует или выпускает карту."
+      operationId: processRequest
+      parameters:
+        - name: id
+          in: path
+          description: ID заявки
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 5
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProcessCardRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardRequestDto"
+      security:
+        - bearerAuth: []
+  /api/transactions/{id}:
+    get:
+      tags:
+        - Транзакции пользователя
+      summary: Получить транзакцию
+      description: Возвращает информацию о транзакции текущего пользователя по её
+        идентификатору
+      operationId: findTransactionForUser
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор транзакции
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 15
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TransactionDto"
+  /api/cards:
+    get:
+      tags:
+        - Карты пользователя
+      summary: Получить карты пользователя
+      description: "Возвращает страницу карт текущего пользователя с поддержкой фи\
+        льтрации, пагинации и сортировки"
+      operationId: findAllCardsForUser
+      parameters:
+        - name: status
+          in: query
+          description: Статус карты
+          required: false
+          schema:
+            type: string
+            enum:
+              - ACTIVE
+              - BLOCKED
+              - EXPIRED
+            pattern: ACTIVE|BLOCKED|EXPIRED
+          example: ACTIVE
+        - name: search
+          in: query
+          description: Поисковая строка по карте
+          required: false
+          schema:
+            type: string
+            maxLength: 16
+            minLength: 0
+          example: 1234
+        - name: createdFrom
+          in: query
+          description: "Дата и время создания карты, начиная с которой выполнять пои\
+          ск"
+          required: false
+          schema:
+            type: string
+            format: date-time
+          example: 2026-01-01T00:00:00
+        - name: createdTo
+          in: query
+          description: "Дата и время создания карты, до которой выполнять поиск"
+          required: false
+          schema:
+            type: string
+            format: date-time
+          example: 2026-02-01T00:00:00
+        - name: page
+          in: query
+          description: Zero-based page index (0..N)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: The size of the page to be returned
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+        - name: sort
+          in: query
+          description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+          required: false
+          schema:
+            type: array
+            default:
+              - "creationTime,ASC"
+            items:
+              type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseCardDto"
+  /api/cards/{id}:
+    get:
+      tags:
+        - Карты пользователя
+      summary: Получить карту
+      description: Возвращает информацию о карте по её идентификатору
+      operationId: findById
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор карты
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 3
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardDto"
+  /admin/users:
+    get:
+      tags:
+        - Администрирование пользователей
+      summary: Получить список пользователей
+      description: "Возвращает страницу пользователей с поддержкой поиска, пагинац\
+        ии и сортировки"
+      operationId: findAllUsers
+      parameters:
+        - name: page
+          in: query
+          description: Zero-based page index (0..N)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: The size of the page to be returned
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+        - name: sort
+          in: query
+          description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+          required: false
+          schema:
+            type: array
+            default:
+              - "creationTime,ASC"
+            items:
+              type: string
+        - name: search
+          in: query
+          description: Строка поиска пользователей
+          required: false
+          schema:
+            type: string
+          example: ivan
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseUserDto"
+  /admin/users/{userId}/transactions:
+    get:
+      tags:
+        - Администрирование транзакций
+      summary: Получить транзакции пользователя
+      description: Возвращает страницу транзакций указанного пользователя с поддержкой
+        пагинации и сортировки
+      operationId: findAllUserTransaction
+      parameters:
+        - name: userId
+          in: path
+          description: Идентификатор пользователя
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 3
+        - name: page
+          in: query
+          description: Zero-based page index (0..N)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: The size of the page to be returned
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+        - name: sort
+          in: query
+          description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+          required: false
+          schema:
+            type: array
+            default:
+              - "creationTime,ASC"
+            items:
+              type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseTransactionDto"
+  /admin/users/{id}:
+    get:
+      tags:
+        - Администрирование пользователей
+      summary: Получить пользователя
+      description: Возвращает информацию о пользователе по его идентификатору
+      operationId: findUser
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор пользователя
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 3
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserDto"
+  /admin/transactions/{id}:
+    get:
+      tags:
+        - Администрирование транзакций
+      summary: Получить транзакцию по идентификатору
+      description: Возвращает подробную информацию о транзакции по её идентификатору
+      operationId: findTransaction
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор транзакции
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 15
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TransactionDto"
+  /admin/cards:
+    get:
+      tags:
+        - "Админ: карты"
+      summary: Получить все карты
+      description: Возвращает список всех карт с пагинацией и сортировкой по дате
+        создания
+      operationId: findAllCards
+      parameters:
+        - name: status
+          in: query
+          description: Статус карты
+          required: false
+          schema:
+            type: string
+            enum:
+              - ACTIVE
+              - BLOCKED
+              - EXPIRED
+            pattern: ACTIVE|BLOCKED|EXPIRED
+          example: ACTIVE
+        - name: search
+          in: query
+          description: Поисковая строка по карте
+          required: false
+          schema:
+            type: string
+            maxLength: 16
+            minLength: 0
+          example: 1234
+        - name: createdFrom
+          in: query
+          description: "Дата и время создания карты, начиная с которой выполнять пои\
+          ск"
+          required: false
+          schema:
+            type: string
+            format: date-time
+          example: 2026-01-01T00:00:00
+        - name: createdTo
+          in: query
+          description: "Дата и время создания карты, до которой выполнять поиск"
+          required: false
+          schema:
+            type: string
+            format: date-time
+          example: 2026-02-01T00:00:00
+        - name: page
+          in: query
+          description: Zero-based page index (0..N)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: The size of the page to be returned
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+        - name: sort
+          in: query
+          description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+          required: false
+          schema:
+            type: array
+            default:
+              - "creationTime,ASC"
+            items:
+              type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseCardDto"
+      security:
+        - bearerAuth: []
+  /admin/cards/{id}:
+    get:
+      tags:
+        - "Админ: карты"
+      summary: Получить карту по ID
+      description: Возвращает конкретную карту по её идентификатору
+      operationId: findCard
+      parameters:
+        - name: id
+          in: path
+          description: ID карты
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardDto"
+      security:
+        - bearerAuth: []
+  /admin/card-requests:
+    get:
+      tags:
+        - "Админ: заявки"
+      summary: Получить все заявки
+      description: Возвращает список всех заявок с пагинацией и сортировкой по дате
+        создания (по убыванию)
+      operationId: findAllRequests
+      parameters:
+        - name: requestType
+          in: query
+          description: Тип заявки
+          required: false
+          schema:
+            type: string
+            enum:
+              - ISSUE
+              - BLOCK
+              - ACTIVATE
+              - DELETE
+            pattern: ISSUE|BLOCK|ACTIVATE|DELETE
+          example: ISSUE
+        - name: status
+          in: query
+          description: Статус заявки
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - APPROVED
+              - REJECTED
+            pattern: PENDING|APPROVED|REJECTED
+          example: PENDING
+        - name: page
+          in: query
+          description: Zero-based page index (0..N)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: The size of the page to be returned
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+        - name: sort
+          in: query
+          description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+          required: false
+          schema:
+            type: array
+            default:
+              - "creationTime,DESC"
+            items:
+              type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseCardRequestDto"
+      security:
+        - bearerAuth: []
+components:
+  schemas:
+    TransactionRequest:
+      type: object
+      description: Запрос на перевод средств между картами одного пользователя
+      properties:
+        fromCardId:
+          type: integer
+          format: int64
+          description: ID карты отправителя
+          example: 1
+        toCardId:
+          type: integer
+          format: int64
+          description: ID карты получателя
+          example: 2
+        amount:
+          type: number
+          description: Сумма перевода
+          example: 150.0
+      required:
+        - amount
+        - fromCardId
+        - toCardId
+    CardDto:
+      type: object
+      description: Информация о банковской карте
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор карты
+          example: 1
+        cardNumber:
+          type: string
+          description: Замаскированный номер карты
+          example: '**** **** **** 1234'
+        owner:
+          $ref: "#/components/schemas/UserDto"
+          description: Владелец карты
+        creationTime:
+          type: string
+          format: date-time
+          description: Дата и время создания карты
+          example: 2026-06-10T12:00:00
+        expirationDate:
+          type: string
+          format: date
+          description: Срок действия (месяц/год)
+          example: 2028-12-31
+        status:
+          type: string
+          description: Статус карты
+          example: ACTIVE
+        balance:
+          type: number
+          description: Текущий баланс
+          example: 1500.0
+    TransactionDto:
+      type: object
+      description: Данные о проведённой транзакции
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID транзакции
+          example: 42
+        fromCard:
+          $ref: "#/components/schemas/CardDto"
+          description: Карта отправитель
+        toCard:
+          $ref: "#/components/schemas/CardDto"
+          description: Карта получатель
+        creationTime:
+          type: string
+          format: date-time
+          description: Время выполнения транзакции
+          example: 2026-06-15T14:30:00
+        amount:
+          type: number
+          description: Сумма перевода
+          example: 150.0
+    UserDto:
+      type: object
+      description: Публичная информация о пользователе
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор пользователя
+          example: 1
+        username:
+          type: string
+          description: Имя пользователя (логин)
+          example: alexey
+        role:
+          type: string
+          description: Роль пользователя
+          enum:
+            - USER
+            - ADMIN
+          example: USER
+        creationTime:
+          type: string
+          format: date-time
+          description: Дата и время создания учётной записи
+          example: 2026-06-15T10:00:00
+        enabled:
+          type: boolean
+          description: Разблокирован ли пользователь
+          example: true
+    CardActionRequest:
+      type: object
+      description: Запрос на создание заявки по карте
+      properties:
+        requestType:
+          type: string
+          description: "Тип запроса(ISSUE, BLOCK, ACTIVATE, DELETE)"
+          enum:
+            - ISSUE
+            - BLOCK
+            - ACTIVATE
+            - DELETE
+          example: ISSUE
+          minLength: 1
+          pattern: ISSUE|BLOCK|ACTIVATE|DELETE
+        cardId:
+          type: integer
+          format: int64
+          description: "ID карты (обязателен для BLOCK, ACTIVATE, DELETE; для ISSUE\
+            \ можно не передавать)"
+          example: 1
+      required:
+        - requestType
+    CardRequestDto:
+      type: object
+      description: "Заявка на действие с картой (блокировка, активация, выпуск)"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID заявки
+          example: 10
+        requester:
+          $ref: "#/components/schemas/UserDto"
+          description: "Пользователь, создавший заявку"
+        creationTime:
+          type: string
+          format: date-time
+          description: Время создания заявки
+          example: 2026-06-10T10:30:00
+        status:
+          type: string
+          description: Статус заявки
+          example: PENDING
+        requestType:
+          type: string
+          description: Тип запроса
+          example: BLOCK
+        card:
+          $ref: "#/components/schemas/CardDto"
+          description: "Карта, к которой относится заявка (может быть null для ISSUE)"
+        processedBy:
+          $ref: "#/components/schemas/UserDto"
+          description: "Администратор, обработавший заявку (null, если ещё не обра\
+            ботана)"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Дата последнего обновления
+          example: 2026-06-10T12:45:00
+    AuthUserRequest:
+      type: object
+      description: Запрос на аутентификацию
+      properties:
+        username:
+          type: string
+          description: Имя пользователя
+          example: username
+          maxLength: 50
+          minLength: 5
+        password:
+          type: string
+          description: Пароль
+          example: password
+          maxLength: 100
+          minLength: 5
+      required:
+        - password
+        - username
+    JwtResponseDto:
+      type: object
+      description: Ответ с JWT-токеном после успешной аутентификации
+      properties:
+        token:
+          type: string
+          description: JWT токен доступа
+          example: eyJhbGciOiJIUzI1NiJ9...
+        type:
+          type: string
+          description: Тип токена
+          example: Bearer
+    CreateCardRequest:
+      type: object
+      description: Запрос на создание новой карты
+      properties:
+        cardNumber:
+          type: string
+          description: Номер карты (16 цифр)
+          example: "4532015112830366"
+          minLength: 1
+          pattern: "\\d{16}"
+        expirationDate:
+          type: string
+          description: Срок действия карты в формате MM/yy
+          example: 12/27
+          pattern: "^(0[1-9]|1[0-2])/\\d{2}$"
+      required:
+        - cardNumber
+        - expirationDate
+    ChangeBalanceRequest:
+      type: object
+      properties:
+        operation:
+          type: string
+          description: Тип операции с балансом
+          enum:
+            - ADD
+            - SUBTRACT
+          example: ADD
+          minLength: 1
+          pattern: ADD|SUBTRACT
+        amount:
+          type: number
+          description: Сумма операции
+          example: 1500.5
+          maximum: 10000000
+          minimum: 0.01
+      required:
+        - amount
+        - operation
+    UpdateCardExpirationDateRequest:
+      type: object
+      properties:
+        expirationDate:
+          type: string
+          description: Новый срок действия карты в формате MM/yy
+          example: 12/29
+          pattern: "^(0[1-9]|1[0-2])/\\d{2}$"
+      required:
+        - expirationDate
+    ProcessCardRequest:
+      type: object
+      description: Решение и опциональный комментарий
+      properties:
+        action:
+          type: string
+          description: "Решение по заявке: APPROVE или REJECT"
+          enum:
+            - APPROVE
+            - REJECT
+          example: APPROVE
+          minLength: 1
+          pattern: APPROVE|REJECT
+      required:
+        - action
+    PageResponseTransactionDto:
+      type: object
+      description: Ответ с пагинацией
+      properties:
+        content:
+          type: array
+          description: Список элементов на текущей странице
+          items:
+            $ref: "#/components/schemas/TransactionDto"
+        page:
+          type: integer
+          format: int32
+          description: Номер текущей страницы (0-based)
+          example: 0
+        size:
+          type: integer
+          format: int32
+          description: Размер страницы
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          description: Общее количество элементов
+          example: 125
+        totalPages:
+          type: integer
+          format: int32
+          description: Общее количество страниц
+          example: 7
+        hasNext:
+          type: boolean
+          description: Есть ли следующая страница
+          example: true
+        hasPrevious:
+          type: boolean
+          description: Есть ли предыдущая страница
+          example: false
+    PageResponseCardDto:
+      type: object
+      description: Ответ с пагинацией
+      properties:
+        content:
+          type: array
+          description: Список элементов на текущей странице
+          items:
+            $ref: "#/components/schemas/CardDto"
+        page:
+          type: integer
+          format: int32
+          description: Номер текущей страницы (0-based)
+          example: 0
+        size:
+          type: integer
+          format: int32
+          description: Размер страницы
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          description: Общее количество элементов
+          example: 125
+        totalPages:
+          type: integer
+          format: int32
+          description: Общее количество страниц
+          example: 7
+        hasNext:
+          type: boolean
+          description: Есть ли следующая страница
+          example: true
+        hasPrevious:
+          type: boolean
+          description: Есть ли предыдущая страница
+          example: false
+    PageResponseUserDto:
+      type: object
+      description: Ответ с пагинацией
+      properties:
+        content:
+          type: array
+          description: Список элементов на текущей странице
+          items:
+            $ref: "#/components/schemas/UserDto"
+        page:
+          type: integer
+          format: int32
+          description: Номер текущей страницы (0-based)
+          example: 0
+        size:
+          type: integer
+          format: int32
+          description: Размер страницы
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          description: Общее количество элементов
+          example: 125
+        totalPages:
+          type: integer
+          format: int32
+          description: Общее количество страниц
+          example: 7
+        hasNext:
+          type: boolean
+          description: Есть ли следующая страница
+          example: true
+        hasPrevious:
+          type: boolean
+          description: Есть ли предыдущая страница
+          example: false
+    PageResponseCardRequestDto:
+      type: object
+      description: Ответ с пагинацией
+      properties:
+        content:
+          type: array
+          description: Список элементов на текущей странице
+          items:
+            $ref: "#/components/schemas/CardRequestDto"
+        page:
+          type: integer
+          format: int32
+          description: Номер текущей страницы (0-based)
+          example: 0
+        size:
+          type: integer
+          format: int32
+          description: Размер страницы
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          description: Общее количество элементов
+          example: 125
+        totalPages:
+          type: integer
+          format: int32
+          description: Общее количество страниц
+          example: 7
+        hasNext:
+          type: boolean
+          description: Есть ли следующая страница
+          example: true
+        hasPrevious:
+          type: boolean
+          description: Есть ли предыдущая страница
+          example: false
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: "Вставьте JWT токен в формате: **Bearer &lt;токен&gt;**"
+      name: bearerAuth
+      scheme: bearer
+      bearerFormat: JWT

@@ -20,7 +20,13 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
+/**
+ * REST-контроллер для операций пользователя с банковскими картами.
+ *
+ * Предоставляет текущему аутентифицированному пользователю возможность
+ * просматривать свои карты, получать информацию о конкретной карте
+ * и выполнять операции изменения баланса.
+ */
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -29,7 +35,17 @@ import org.springframework.web.bind.annotation.*;
         description = "Просмотр карт пользователя и выполнение операций с балансом")
 public class CardController {
     private final CardService cardService;
-
+    /**
+     * Возвращает страницу карт текущего пользователя.
+     *
+     * Поддерживает фильтрацию по параметрам карты, пагинацию и сортировку.
+     * Пользователь получает только карты, принадлежащие ему.
+     *
+     * @param filter параметры фильтрации карт
+     * @param pageable параметры пагинации и сортировки
+     * @param user текущий аутентифицированный пользователь
+     * @return страница с картами текущего пользователя
+     */
     @Operation(summary = "Получить карты пользователя",
             description = "Возвращает страницу карт текущего пользователя с поддержкой фильтрации, пагинации и сортировки")
     @GetMapping
@@ -44,9 +60,17 @@ public class CardController {
     ){
         log.debug("Получение карт пользователя с ID {}",user.getId());
 
-        return ResponseEntity.ok(cardService.findAllCardsFotUser(filter,pageable,user));
+        return ResponseEntity.ok(cardService.findAllCardsForUser(filter,pageable,user));
     }
-
+    /**
+     * Возвращает карту текущего пользователя по идентификатору.
+     *
+     * Доступ разрешён только к карте, принадлежащей текущему пользователю.
+     *
+     * @param id идентификатор карты
+     * @param user текущий аутентифицированный пользователь
+     * @return данные найденной карты
+     */
     @Operation(summary = "Получить карту",
             description = "Возвращает информацию о карте по её идентификатору")
     @GetMapping("/{id}")
@@ -59,7 +83,18 @@ public class CardController {
 
         return ResponseEntity.ok(cardService.findByIdForUser(id,user));
     }
-
+    /**
+     * Изменяет баланс карты текущего пользователя.
+     *
+     * В зависимости от значения поля operation выполняет пополнение баланса
+     * или списание средств с карты.
+     *
+     * @param id идентификатор карты
+     * @param request данные операции изменения баланса
+     * @param user текущий аутентифицированный пользователь
+     * @return карта с обновлённым балансом
+     * @throws IllegalArgumentException если передан неподдерживаемый тип операции
+     */
     @Operation(summary = "Изменить баланс карты",
             description = "Пополняет баланс карты или списывает средства в зависимости от значения operation")
     @PatchMapping("/{id}/balance")

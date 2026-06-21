@@ -10,6 +10,12 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+/**
+ * Entity транзакции между банковскими картами.
+ *
+ * Хранит информацию о владельце транзакции, карте отправителя, карте получателя,
+ * сумме перевода и дате создания операции.
+ */
 
 @Entity
 @Table(name="transaction")

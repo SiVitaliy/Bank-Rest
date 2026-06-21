@@ -20,7 +20,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-
+/**
+ * REST-контроллер для пользовательских операций с транзакциями.
+ *
+ * Предоставляет текущему аутентифицированному пользователю возможность
+ * просматривать свои транзакции, получать транзакцию по идентификатору
+ * и выполнять перевод средств между картами.
+ */
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -29,7 +35,16 @@ import java.net.URI;
         description = "Просмотр и выполнение транзакций текущего пользователя")
 public class TransactionController {
     private final TransactionService transactionService;
-
+    /**
+     * Возвращает страницу транзакций текущего пользователя.
+     *
+     * Поддерживает пагинацию и сортировку. Пользователь получает только те
+     * транзакции, которые относятся к его картам.
+     *
+     * @param pageable параметры пагинации и сортировки
+     * @param user текущий аутентифицированный пользователь
+     * @return страница с транзакциями текущего пользователя
+     */
     @Operation(summary = "Получить транзакции пользователя",
             description = "Возвращает страницу транзакций текущего пользователя с поддержкой пагинации и сортировки")
     @GetMapping()
@@ -46,7 +61,15 @@ public class TransactionController {
         log.debug("Получение транзакций пользователем");
         return ResponseEntity.ok(transactionService.findAllByUser(pageable,user));
     }
-
+    /**
+     * Возвращает транзакцию текущего пользователя по идентификатору.
+     *
+     * Доступ разрешён только к транзакциям, связанным с картами текущего пользователя.
+     *
+     * @param id идентификатор транзакции
+     * @param user текущий аутентифицированный пользователь
+     * @return данные найденной транзакции
+     */
     @Operation(summary = "Получить транзакцию",
             description = "Возвращает информацию о транзакции текущего пользователя по её идентификатору")
     @GetMapping("/{id}")
@@ -60,7 +83,16 @@ public class TransactionController {
 
         return ResponseEntity.ok(transactionService.getTransactionForUser(id,user));
     }
-
+    /**
+     * Выполняет перевод средств между картами текущего пользователя.
+     *
+     * После успешного выполнения операции создаётся транзакция, а в заголовок ответа
+     * Location добавляется URI созданной транзакции.
+     *
+     * @param request данные для выполнения перевода
+     * @param user текущий аутентифицированный пользователь
+     * @return созданная транзакция
+     */
     @Operation(summary = "Выполнить транзакцию",
             description = "Выполняет перевод между картами и возвращает созданную транзакцию")
     @PostMapping()

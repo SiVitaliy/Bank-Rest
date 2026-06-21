@@ -70,7 +70,7 @@ class CardControllerWebMvcTest {
         User user = authenticatedUser();
         PageResponse<CardDto> response = mock(PageResponse.class);
 
-        when(cardService.findAllCardsFotUser(
+        when(cardService.findAllCardsForUser(
                 any(CardFilter.class),
                 any(Pageable.class),
                 eq(user)
@@ -85,7 +85,7 @@ class CardControllerWebMvcTest {
         ArgumentCaptor<Pageable> pageableCaptor =
                 ArgumentCaptor.forClass(Pageable.class);
 
-        verify(cardService).findAllCardsFotUser(
+        verify(cardService).findAllCardsForUser(
                 filterCaptor.capture(),
                 pageableCaptor.capture(),
                 eq(user)
@@ -106,7 +106,7 @@ class CardControllerWebMvcTest {
         User user = authenticatedUser();
         PageResponse<CardDto> response = mock(PageResponse.class);
 
-        when(cardService.findAllCardsFotUser(
+        when(cardService.findAllCardsForUser(
                 any(CardFilter.class),
                 any(Pageable.class),
                 eq(user)
@@ -122,7 +122,7 @@ class CardControllerWebMvcTest {
         ArgumentCaptor<Pageable> pageableCaptor =
                 ArgumentCaptor.forClass(Pageable.class);
 
-        verify(cardService).findAllCardsFotUser(
+        verify(cardService).findAllCardsForUser(
                 any(CardFilter.class),
                 pageableCaptor.capture(),
                 eq(user)

@@ -9,11 +9,11 @@ public record AuthUserRequest(
 
         @Schema(description = "Имя пользователя", example = "username")
         @NotBlank(message = "Имя пользователя обязательно")
-        @Size(min = 5, max = 50, message = "Имя пользователя должно быть от 5 до 50 символов")
+        @Size(min = 4, max = 50, message = "Имя пользователя должно быть от 4 до 50 символов")
         String username,
         @Schema(description = "Пароль", example = "password")
         @NotBlank(message = "Пароль обязателен")
-        @Size(min = 5, max = 100, message = "Пароль должен быть от 5 до 100 символов")
+        @Size(min = 4, max = 100, message = "Пароль должен быть от 4 до 100 символов")
         String password) {
 
 }

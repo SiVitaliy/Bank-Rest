@@ -9,13 +9,17 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
+/**
+ * Entity банковской карты.
+ * Хранит зашифрованный номер карты, последние четыре цифры для отображения,
+ * владельца карты, администратора, выпустившего карту, срок действия, статус и
+ * баланс.
+ */
 @Entity
 @Table(name="cards")
 @Getter
 @Setter
 @NoArgsConstructor
-
 @EntityListeners(AuditingEntityListener.class)
 public class Card {
     public enum CardStatus {
@@ -23,11 +27,6 @@ public class Card {
 
     }
 
-    //    Номер карты (зашифрован, отображается маской: **** **** **** 1234)
-//    Владелец
-//    Срок действия
-//    Статус: Активна, Заблокирована, Истек срок
-//    Баланс
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")

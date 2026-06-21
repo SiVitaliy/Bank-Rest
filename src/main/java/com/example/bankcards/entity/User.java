@@ -12,7 +12,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-
+/**
+ * Entity пользователя системы.
+ *
+ * Хранит данные учётной записи пользователя, его роль, статус активности,
+ * дату создания и связанные банковские карты. Используется Spring Security
+ * как реализация {@link UserDetails} для аутентификации и авторизации.
+ */
 @Entity
 @Table(name="users")
 @Getter

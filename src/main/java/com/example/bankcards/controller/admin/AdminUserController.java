@@ -16,7 +16,13 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
+/**
+ * REST-контроллер для управления пользователями администратором.
+ *
+ * Предоставляет администратору операции просмотра списка пользователей,
+ * поиска пользователей, получения пользователя по идентификатору,
+ * а также блокировки и разблокировки учётных записей.
+ */
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -25,7 +31,13 @@ import org.springframework.web.bind.annotation.*;
         description = "Просмотр пользователей, их поиск, блокировка и разблокировка")
 public class AdminUserController {
     private final UserService userService;
-
+    /**
+     * Возвращает страницу пользователей с поддержкой поиска, пагинации и сортировки.
+     *
+     * @param pageable параметры пагинации и сортировки
+     * @param search строка поиска пользователей
+     * @return страница с данными пользователей
+     */
     @Operation(summary = "Получить список пользователей",
             description = "Возвращает страницу пользователей с поддержкой поиска, пагинации и сортировки")
     @GetMapping
@@ -38,7 +50,12 @@ public class AdminUserController {
 
         return ResponseEntity.ok(userService.findAll(pageable,search));
     }
-
+    /**
+     * Возвращает пользователя по его идентификатору.
+     *
+     * @param id идентификатор пользователя
+     * @return данные найденного пользователя
+     */
     @Operation(summary = "Получить пользователя",
             description = "Возвращает информацию о пользователе по его идентификатору")
     @GetMapping("/{id}")
@@ -49,7 +66,13 @@ public class AdminUserController {
 
         return ResponseEntity.ok(userService.findById(id));
     }
-
+    /**
+     * Блокирует пользователя по его идентификатору.
+     *
+     * @param userId идентификатор блокируемого пользователя
+     * @param admin текущий аутентифицированный администратор
+     * @return данные заблокированного пользователя
+     */
     @Operation(summary = "Заблокировать пользователя",
             description = "Блокирует пользователя по идентификатору"
     )
@@ -64,7 +87,13 @@ public class AdminUserController {
 
         return ResponseEntity.ok(userService.lock(userId,admin));
     }
-
+    /**
+     * Разблокирует пользователя по его идентификатору.
+     *
+     * @param userId идентификатор разблокируемого пользователя
+     * @param admin текущий аутентифицированный администратор
+     * @return данные разблокированного пользователя
+     */
     @Operation(summary = "Разблокировать пользователя",
             description = "Разблокирует пользователя по идентификатору")
     @PatchMapping("/{userId}/unlock")

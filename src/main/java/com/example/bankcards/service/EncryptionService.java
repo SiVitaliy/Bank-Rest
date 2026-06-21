@@ -7,7 +7,12 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
-
+/**
+ * Сервис шифрования и расшифровки чувствительных данных.
+ * Используется для хранения номера банковской карты в зашифрованном виде.
+ * Секретный ключ передаётся через настройку {@code encryption.secret}
+ * в формате Base64.
+ */
 @Service
 public class EncryptionService {
 
@@ -18,7 +23,13 @@ public class EncryptionService {
          byte[] decodedKey = Base64.getDecoder().decode(base64Secret);
           this.secretKey = new SecretKeySpec(decodedKey, ALGORITHM);
     }
-
+    /**
+     * Шифрует переданный текст.
+     * Если входное значение равно {@code null}, метод возвращает {@code null}.
+     * @param plainText исходный текст
+     * @return зашифрованный текст в формате Base64
+     * @throws RuntimeException если произошла ошибка шифрования
+     */
       public String encrypt(String plainText) {
         if (plainText == null) return null;
         try {
@@ -30,7 +41,13 @@ public class EncryptionService {
             throw new RuntimeException("Ошибка шифрования данных", e);
         }
     }
-
+    /**
+     * Расшифровывает переданный текст.
+     * Если входное значение равно {@code null}, метод возвращает {@code null}.
+     * @param encryptedText зашифрованный текст в формате Base64
+     * @return расшифрованный исходный текст
+     * @throws RuntimeException если произошла ошибка расшифровки
+     */
        public String decrypt(String encryptedText) {
         if (encryptedText == null) return null;
         try {

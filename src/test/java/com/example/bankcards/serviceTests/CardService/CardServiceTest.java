@@ -120,7 +120,7 @@ class CardServiceTest {
                 .thenReturn(cardDto);
 
         PageResponse<CardDto> result =
-                sut.findAllCardsFotUser(filter, pageable, user);
+                sut.findAllCardsForUser(filter, pageable, user);
 
         assertThat(result).isNotNull();
 

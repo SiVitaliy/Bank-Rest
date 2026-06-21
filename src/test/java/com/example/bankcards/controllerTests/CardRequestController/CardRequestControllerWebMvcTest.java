@@ -74,7 +74,7 @@ class CardRequestControllerWebMvcTest {
                         .content("""
                                 {
                                   "cardId": 3,
-                                  "action": "BLOCK"
+                                  "requestType": "BLOCK"
                                 }
                                 """)
                         .with(authentication(userAuthentication(user)))

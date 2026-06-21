@@ -43,7 +43,7 @@ class AdminTransactionControllerTest {
                 .thenReturn(expectedResponse);
 
         ResponseEntity<PageResponse<TransactionDto>> actualResponse =
-                controller.findAllUserTransaction(userId, pageable);
+                controller.findAllUserTransactions(userId, pageable);
 
         assertThat(actualResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(actualResponse.getBody()).isSameAs(expectedResponse);
